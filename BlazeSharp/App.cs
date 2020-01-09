@@ -13,9 +13,33 @@ namespace BlazeSharp
     class App : ApplicationContext
     {
         /// <summary>
-        /// the path of the commands file
+        /// The default title for notifications and the notify icon
         /// </summary>
-        const string COMMANDS_FILE = "./commands.blaze";
+        const string NOTIFY_TITLE = "Blaze"; 
+
+        /// <summary>
+        /// The default commands file path
+        /// </summary>
+        const string DEFAULT_COMMANDS_FILE = "./default_commands.blaze";
+
+        /// <summary>
+        /// the full path of the commands file for the current user
+        /// </summary>
+        string CommandsFile
+        {
+            get
+            {
+                //create path
+                string path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Blaze", "commands.blaze");
+
+                //make dirs as required
+                if (!Directory.Exists(Path.GetDirectoryName(path)))
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(path));
+                }
+                return path;
+            }
+        }
 
         #region Initialize App
         public static App Instance;
@@ -82,22 +106,32 @@ namespace BlazeSharp
             keyMonitor = new KeyboardMonitor();
             commandCapture = new StringBuilder();
 
+            //initialize ui
+            liveStats = new LiveStatsUI();
+            InitNotify();
+
             //load commands
-            commands = BlazeCommands.FromFile(COMMANDS_FILE);
+            commands = BlazeCommands.FromFile(CommandsFile);
             if (commands == null)
             {
-                MessageBox.Show($"Could not load Commands from {COMMANDS_FILE}!\nApplication will exit.", "Cannot Load Commands", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                Application.Exit();
+                //MessageBox.Show($"Could not load Commands from \n{CommandsFile}", "Cannot Load Commands", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                //Application.Exit();
+
+                //load default commands
+                File.Copy(DEFAULT_COMMANDS_FILE, CommandsFile);
+                commands = BlazeCommands.FromFile(CommandsFile);
+                SendNotification("Default Commands were loaded!");
+            }
+
+            //sanity- check: commands should be loaded by now
+            if (commands == null)
+            {
                 return;
             }
 
             //initialize monitor
             keyMonitor.Init();
             keyMonitor.KeyPressed += OnGlobalKeyPress;
-
-            //initialize ui
-            liveStats = new LiveStatsUI();
-            InitNotify();
         }
 
         /// <summary>
@@ -107,10 +141,18 @@ namespace BlazeSharp
         {
             //create menu
             ContextMenu context = new ContextMenu();
-            context.MenuItems.Add("Edit Commands", (s, e) =>
+            context.MenuItems.Add("Edit Commands", (ts, te) =>
             {
                 //open commands.blaze file in editor
-                Process.Start("notepad", Path.Combine(Environment.CurrentDirectory, COMMANDS_FILE));
+                Process editor = Process.Start("notepad", CommandsFile);
+                editor.EnableRaisingEvents = true;
+                editor.Exited += (xs, xe) =>
+                {
+                    //reload commands
+                    commands = BlazeCommands.FromFile(CommandsFile);
+                    SendNotification("Commands File was reloaded!");
+                    editor.Dispose();
+                };
             });
             context.MenuItems.Add("Live Stats", (s, e) =>
             {
@@ -127,12 +169,33 @@ namespace BlazeSharp
             notifyIcon = new NotifyIcon()
             {
                 Icon = SystemIcons.Error,
-                Text = "Blaze - Running",
+                Text = NOTIFY_TITLE,
                 ContextMenu = context
             };
 
             //make icon visible
             notifyIcon.Visible = true;
+
+            //allows notifications
+            notifyIcon.BalloonTipClosed += (s, e) =>
+            {
+                notifyIcon.Visible = false;
+                notifyIcon.Visible = true;
+            };
+        }
+
+        /// <summary>
+        /// Send a notification
+        /// </summary>
+        /// <param name="msg">the message of the notification</param>
+        /// <param name="title">the title of the notification</param>
+        void SendNotification(string msg, string title = NOTIFY_TITLE)
+        {
+            //dont continue if no notify icon
+            if (notifyIcon == null) return;
+
+            //send notification
+            notifyIcon.ShowBalloonTip(5000, title, msg, ToolTipIcon.None);
         }
 
         /// <summary>
