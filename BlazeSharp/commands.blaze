@@ -4,12 +4,8 @@
 Das ist ein Test- Text.
 #end
 
-#command hw
-Hello World!
-#end
-
-#command mlt
-Das ist ein
-Multi- Line
-	Test
+#command blaze
+Blaze Text- Test.
+Auch mit mehreren Zeilen...
+...oder		Tabs.
 #end

@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace BlazeSharp
@@ -116,8 +112,8 @@ namespace BlazeSharp
             Console.Clear();
             Console.SetCursorPosition(0, 0);
             Console.WriteLine($@"
-Last Key: {vKey.ToString()}
-Last char: {vChar}
+Last Key:        {vKey.ToString()}
+Last char:       {vChar.ToString()}
 Current Command: {(commandCapturing ? commandCapture.ToString() : "None")}");
 
             return cancelKeypress;
