@@ -11,6 +11,11 @@ namespace BlazeSharp
 {
     class App : ApplicationContext
     {
+        /// <summary>
+        /// the path of the commands file
+        /// </summary>
+        const string COMMANDS_FILE = "./commands.blaze";
+
         #region Initialize App
         public static App Instance;
 
@@ -37,6 +42,11 @@ namespace BlazeSharp
         KeyboardMonitor keyMonitor;
 
         /// <summary>
+        /// contains all user- defined commands that were loaded
+        /// </summary>
+        BlazeCommands commands;
+
+        /// <summary>
         /// String builder to capture commands that have been typed
         /// </summary>
         StringBuilder commandCapture;
@@ -51,10 +61,6 @@ namespace BlazeSharp
         /// </summary>
         bool selfTyping = false;
 
-        char hotChar = '#';
-
-        StringDictionary commandsDict;
-
         /// <summary>
         /// Initialize the application
         /// </summary>
@@ -64,20 +70,19 @@ namespace BlazeSharp
             keySimulator = new KeyboardSimulator();
             keyMonitor = new KeyboardMonitor();
             commandCapture = new StringBuilder();
-            commandsDict = new StringDictionary();
+
+            //load commands
+            commands = BlazeCommands.FromFile(COMMANDS_FILE);
+            if (commands == null)
+            {
+                Console.WriteLine("Loading of Commands failed!");
+                return;
+            }
 
             //initialize monitor
             keyMonitor.Init();
             keyMonitor.KeyPressed += OnGlobalKeyPress;
             Console.WriteLine("Ready.");
-
-            dbInit();
-        }
-
-        void dbInit()
-        {
-            commandsDict.Add("tEst", "Das ist ein Test- Text...");
-            commandsDict.Add("abc", "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
         }
 
         /// <summary>
@@ -101,7 +106,7 @@ namespace BlazeSharp
             }
 
             //hotchar was pressed, start listening
-            if (vChar.Equals(hotChar))
+            if (vChar.Equals(commands.HotChar))
             {
                 commandCapture.Clear();
                 commandCapturing = true;
@@ -127,7 +132,7 @@ Current Command: {(commandCapturing ? commandCapture.ToString() : "None")}");
             //check EVERY command key
             string capCmd = commandCapture.ToString();
             bool validCommandPart = false;
-            foreach (string cmd in commandsDict.Keys)
+            foreach (string cmd in commands.CommandsDict.Keys)
             {
                 //check if currently captured command could be (part of) a existing command
                 if (cmd.StartsWith(capCmd, true, CultureInfo.InvariantCulture))
@@ -142,7 +147,7 @@ Current Command: {(commandCapturing ? commandCapture.ToString() : "None")}");
                     validCommandPart = true;
 
                     //type out command text
-                    TypeCommand(cmd, commandsDict[cmd]);
+                    TypeCommand(cmd, commands.CommandsDict[cmd]);
 
                     //exit right- away, cancelling currrent keypress
                     return true;
@@ -193,7 +198,7 @@ Current Command: {(commandCapturing ? commandCapture.ToString() : "None")}");
             base.Dispose(disposing);
 
             //dispose keymon
-            keyMonitor.Dispose();
+            keyMonitor?.Dispose();
         }
     }
 }
