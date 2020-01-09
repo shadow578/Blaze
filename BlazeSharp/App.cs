@@ -168,7 +168,7 @@ namespace BlazeSharp
             //create icon
             notifyIcon = new NotifyIcon()
             {
-                Icon = SystemIcons.Error,
+                Icon = Properties.Resources.app_icon,
                 Text = NOTIFY_TITLE,
                 ContextMenu = context
             };
