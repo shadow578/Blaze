@@ -1,6 +1,7 @@
 ﻿using BlazeSharp.Keyboard;
 using BlazeSharp.UI;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
@@ -192,9 +193,17 @@ namespace BlazeSharp
         /// </summary>
         void AfterInit()
         {
-            //get strings needed for the how- to- message
+            //get hotchar
             string strHotChar = commands.HotChar.ToString();
-            string strExampleCmd = commands.CommandsDict.Keys.Cast<string>().First();
+
+            //get commands as list
+            List<string> cmds = commands.CommandsDict.Keys.Cast<string>().ToList();
+
+            //get random command
+            Random rnd = new Random();
+            string strExampleCmd = cmds[rnd.Next(0, cmds.Count)];
+
+            //fallback command to "NULL"
             if (string.IsNullOrWhiteSpace(strExampleCmd))
             {
                 strExampleCmd = "NULL";
