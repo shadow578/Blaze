@@ -1,11 +1,7 @@
 ﻿#hotchar #
 
-#command test
-Das ist ein Test- Text.
-#end
-
 #command blaze
-Blaze Text- Test.
-Auch mit mehreren Zeilen...
-...oder		Tabs.
+To use Blaze, type your hotchar followed by the commands hotword (eg. #blaze)
+Blaze will automatically type out the commands text for you.
+You can even type multiple lines!
 #end
