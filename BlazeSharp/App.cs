@@ -69,13 +69,14 @@ namespace BlazeSharp
             //initialize monitor
             keyMonitor.Init();
             keyMonitor.KeyPressed += OnGlobalKeyPress;
+            Console.WriteLine("Ready.");
 
             dbInit();
         }
 
         void dbInit()
         {
-            commandsDict.Add("test", "Das ist ein Test- Text...");
+            commandsDict.Add("tEst", "Das ist ein Test- Text...");
             commandsDict.Add("abc", "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
         }
 
@@ -90,24 +91,13 @@ namespace BlazeSharp
             //ignore if currently typing
             if (selfTyping) return false;
 
-            //write pressed key to console
-            Console.Clear();
-            Console.SetCursorPosition(0, 0);
-            Console.WriteLine(vKey + " - " + vChar);
-
             //record keypresses when capturing
+            bool cancelKeypress = false;
             if (commandCapturing)
             {
                 //record keypress
                 commandCapture.Append(vChar);
-
-                Console.SetCursorPosition(0, 1);
-                Console.WriteLine(commandCapture.ToString());
-
-                if (CheckAndTypeCommand())
-                {
-                    return true;
-                }
+                cancelKeypress = CheckAndTypeCommand();
             }
 
             //hotchar was pressed, start listening
@@ -117,8 +107,15 @@ namespace BlazeSharp
                 commandCapturing = true;
             }
 
-            //don't cancel event
-            return false;
+            //write stats to console
+            Console.Clear();
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine($@"
+Last Key: {vKey.ToString()}
+Last char: {vChar}
+Current Command: {(commandCapturing ? commandCapture.ToString() : "None")}");
+
+            return cancelKeypress;
         }
 
         /// <summary>
@@ -130,16 +127,16 @@ namespace BlazeSharp
             //check EVERY command key
             string capCmd = commandCapture.ToString();
             bool validCommandPart = false;
-            foreach(string cmd in commandsDict.Keys)
+            foreach (string cmd in commandsDict.Keys)
             {
                 //check if currently captured command could be (part of) a existing command
-                if(cmd.StartsWith(capCmd, true, CultureInfo.InvariantCulture))
+                if (cmd.StartsWith(capCmd, true, CultureInfo.InvariantCulture))
                 {
                     validCommandPart = true;
                 }
 
                 //check if currently captured command is a existing command
-                if(cmd.Equals(capCmd, StringComparison.InvariantCultureIgnoreCase))
+                if (cmd.Equals(capCmd, StringComparison.InvariantCultureIgnoreCase))
                 {
                     //is a command!
                     validCommandPart = true;
@@ -156,6 +153,7 @@ namespace BlazeSharp
             {
                 //the current command capture is NOT part of a existing command, stop capturing
                 commandCapturing = false;
+                commandCapture.Clear();
             }
 
             //dont cancel keypress
@@ -175,11 +173,11 @@ namespace BlazeSharp
             //remove typed command
             //the last char is NOT typed yet, but we also have to remove the hotchar
             //so we can just pretend to fully remove the command string...
-            for(int ci = 0; ci < cmd.Length; ci++)
+            for (int ci = 0; ci < cmd.Length; ci++)
             {
                 keySimulator.SendKey(Keys.Back);
             }
-         
+
             //type the command text
             keySimulator.SendString(cmdText);
 
