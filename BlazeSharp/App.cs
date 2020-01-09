@@ -7,6 +7,8 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows.Forms;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace BlazeSharp
 {
@@ -15,7 +17,7 @@ namespace BlazeSharp
         /// <summary>
         /// The default title for notifications and the notify icon
         /// </summary>
-        const string NOTIFY_TITLE = "Blaze"; 
+        const string NOTIFY_TITLE = "Blaze";
 
         /// <summary>
         /// The default commands file path
@@ -132,6 +134,8 @@ namespace BlazeSharp
             //initialize monitor
             keyMonitor.Init();
             keyMonitor.KeyPressed += OnGlobalKeyPress;
+
+            AfterInit();
         }
 
         /// <summary>
@@ -182,6 +186,23 @@ namespace BlazeSharp
                 notifyIcon.Visible = false;
                 notifyIcon.Visible = true;
             };
+        }
+
+        /// <summary>
+        /// Called after Init() finishes
+        /// </summary>
+        void AfterInit()
+        {
+            //get strings needed for the how- to- message
+            string strHotChar = commands.HotChar.ToString();
+            string strExampleCmd = commands.CommandsDict.Keys.Cast<string>().First();
+            if (string.IsNullOrWhiteSpace(strExampleCmd))
+            {
+                strExampleCmd = "NULL";
+            }
+
+            //send notification explaining how it works
+            SendNotification($"{commands.CommandsDict.Count} Commands were loaded. \nOne of them is {strHotChar}{strExampleCmd}", "Blaze is now active");
         }
 
         /// <summary>
