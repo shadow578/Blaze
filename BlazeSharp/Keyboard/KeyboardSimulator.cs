@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using System.Threading;
 using System.Windows.Forms;
 
 namespace BlazeSharp.Keyboard
@@ -34,7 +35,8 @@ namespace BlazeSharp.Keyboard
         /// Send a simulated key globally
         /// </summary>
         /// <param name="key">the keys to simulate. supports bitwise- or-ing for Keys.SHIFT, ALT, and CTRL</param>
-        public void SendKey(Keys key)
+        /// <param name="keySleep">how long the key press is simulated (how long the key press lasts) (ms)</param>
+        public void SendKey(Keys key, int keySleep = 0)
         {
             if (key.HasFlag(Keys.Control))
             {
@@ -51,7 +53,9 @@ namespace BlazeSharp.Keyboard
                 LowLevel.keybd_event((byte)Keys.LShiftKey, 0, 0, 0);
             }
 
+            if (keySleep > 0) Thread.Sleep(keySleep);
             LowLevel.keybd_event((byte)key, 0, 0, 0);
+            if (keySleep > 0) Thread.Sleep(keySleep);
             LowLevel.keybd_event((byte)key, 0, LowLevel.Constants.KEYEVENTF_KEYUP, 0);
 
             if (key.HasFlag(Keys.Shift))

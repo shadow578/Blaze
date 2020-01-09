@@ -2,13 +2,11 @@
 using BlazeSharp.UI;
 using System;
 using System.Diagnostics;
-using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using System.Linq;
-using System.Collections.Generic;
 
 namespace BlazeSharp
 {
@@ -46,6 +44,7 @@ namespace BlazeSharp
         #region Initialize App
         public static App Instance;
 
+        [STAThread]
         static void Main(string[] args)
         {
             //create & start app instance
@@ -318,8 +317,17 @@ namespace BlazeSharp
                 keySimulator.SendKey(Keys.Back);
             }
 
-            //type the command text
-            keySimulator.SendString(cmdText);
+            //get current clipboard content (text)
+            string clip = Clipboard.GetText();
+
+            //copy the text to clipboard
+            Clipboard.SetText(cmdText);
+
+            //type CTRL+V to paste the clipboard
+            keySimulator.SendKey(Keys.Control | Keys.V, 50);
+
+            //restore clipboard
+            Clipboard.SetText(clip);
 
             //reset typing flag
             selfTyping = false;
