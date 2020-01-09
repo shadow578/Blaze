@@ -86,6 +86,7 @@
             // chkIsCapturing
             // 
             this.chkIsCapturing.AutoSize = true;
+            this.chkIsCapturing.Enabled = false;
             this.chkIsCapturing.Location = new System.Drawing.Point(258, 34);
             this.chkIsCapturing.Name = "chkIsCapturing";
             this.chkIsCapturing.Size = new System.Drawing.Size(71, 17);
@@ -108,6 +109,7 @@
             this.Controls.Add(label1);
             this.Name = "LiveStatsUI";
             this.Text = "Live Stats";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OnClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 

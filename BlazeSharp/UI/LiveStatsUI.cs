@@ -16,5 +16,12 @@ namespace BlazeSharp.UI
             txtCommand.Text = cmdProg;
             chkIsCapturing.Checked = isCapturing;
         }
+
+        void OnClosing(object sender, FormClosingEventArgs e)
+        {
+            //dont close form, just hide
+            e.Cancel = true;
+            Hide();
+        }
     }
 }
