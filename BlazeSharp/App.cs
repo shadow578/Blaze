@@ -1,5 +1,6 @@
 ﻿using BlazeSharp.Keyboard;
 using BlazeSharp.UI;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -158,6 +159,17 @@ namespace BlazeSharp
                     editor.Dispose();
                 };
             });
+            context.MenuItems.Add("Autostart App", (s, e) =>
+            {
+                //get sender as menuitem
+                MenuItem sender = s as MenuItem;
+                if (sender == null) return;
+
+                //toggle auto- start state
+                bool autoEn = GetAutoStartEnabled();
+                RegisterAutostart(!autoEn);
+                sender.Checked = !autoEn;
+            });
             context.MenuItems.Add("Live Stats", (s, e) =>
             {
                 //show live stats window
@@ -225,6 +237,32 @@ namespace BlazeSharp
 
             //send notification
             notifyIcon.ShowBalloonTip(5000, title, msg, ToolTipIcon.None);
+        }
+
+        /// <summary>
+        /// Register this program for auto- start for the current user
+        /// </summary>
+        /// <param name="autoStart">should auto start be enabled or disabled?</param>
+        void RegisterAutostart(bool autoStart)
+        {
+            //get autostart root key
+            RegistryKey regKey = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+
+            if (autoStart)
+            {
+                regKey.SetValue(Application.ProductName, Application.ExecutablePath);
+            }
+            else
+            {
+                regKey.DeleteValue(Application.ProductName);
+            }
+        }
+
+        bool GetAutoStartEnabled()
+        {
+            //get autostart root key
+            RegistryKey regKey = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            return regKey.GetValue(Application.ProductName) != null;
         }
 
         /// <summary>
