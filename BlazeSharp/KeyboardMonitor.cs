@@ -9,10 +9,17 @@ namespace BlazeSharp
     class KeyboardMonitor : IDisposable
     {
         /// <summary>
+        /// Event Handler for KeyPressed Event
+        /// </summary>
+        /// <param name="vKey">The raw VKey that was pressed</param>
+        /// <param name="vChar">the decoded unicode char that was pressed</param>
+        /// <returns>should the keypress be cancelled?</returns>
+        public delegate bool KeyPressedEventHandler(Keys vKey, char vChar);
+
+        /// <summary>
         /// Key pressed event, global + low level
         /// </summary>
-        /// <remarks>param 1 is the decoded unicode char, param 2 is the raw Key pressed</remarks>
-        public event Action<char, Keys> KeyPressed;
+        public event KeyPressedEventHandler KeyPressed;
 
         /// <summary>
         /// The low- level hooks handle
@@ -81,22 +88,26 @@ namespace BlazeSharp
             StringBuilder stringBuilder = new StringBuilder(2);
 
             int result = LowLevel.ToUnicode((uint)virtualKey, scanCode, keyboardState, stringBuilder, stringBuilder.Capacity, 0);
-            switch (result)
+
+            if (stringBuilder.Length > 0)
             {
-                case -1:
-                    break;
-                case 0:
-                    break;
-                case 1:
-                    {
-                        ch = stringBuilder[0];
+                switch (result)
+                {
+                    case -1:
                         break;
-                    }
-                default:
-                    {
-                        ch = stringBuilder[0];
+                    case 0:
                         break;
-                    }
+                    case 1:
+                        {
+                            ch = stringBuilder[0];
+                            break;
+                        }
+                    default:
+                        {
+                            ch = stringBuilder[0];
+                            break;
+                        }
+                }
             }
             return ch;
         }
@@ -115,7 +126,12 @@ namespace BlazeSharp
                 char vChar = GetCharFromKey(vKey);
 
                 //invoke event
-                KeyPressed?.Invoke(vChar, vKey);
+                bool? cancelPress = KeyPressed?.Invoke(vKey, vChar);
+                if (cancelPress.HasValue && cancelPress.Value)
+                {
+                    //cancel keypress
+                    return (IntPtr)1;
+                }
             }
 
             return LowLevel.CallNextHookEx(hookPtr, nCode, wParam, lParam);

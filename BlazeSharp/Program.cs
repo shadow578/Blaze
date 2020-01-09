@@ -9,9 +9,16 @@ namespace BlazeSharp
 {
     class Program
     {
+        static KeyboardSimulator sim;
+        static KeyboardMonitor mon;
+
         static void Main(string[] args)
         {
-            KeyboardMonitor mon = new KeyboardMonitor();
+            Console.WriteLine($"Keys: {(int)Keys.W} - target: {0x52}");
+
+            sim = new KeyboardSimulator();
+
+            mon = new KeyboardMonitor();
             mon.Init();
             mon.KeyPressed += Mon_KeyPressed;
 
@@ -21,9 +28,18 @@ namespace BlazeSharp
             mon.Dispose();
         }
 
-        private static void Mon_KeyPressed(char vChar, Keys vKey)
+        private static bool Mon_KeyPressed(Keys vKey, char vChar)
         {
             Console.WriteLine(vKey + " - " + vChar);
+
+            if (vChar == '#')
+            {
+                //sim.SendKey(Keys.G, true);
+                sim.SendString("Test String OoO");
+                return true;
+            }
+
+            return false;
         }
     }
 }
