@@ -1,4 +1,6 @@
-﻿using System;
+﻿using BlazeSharp.Keyboard;
+using BlazeSharp.UI;
+using System;
 using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
@@ -26,6 +28,11 @@ namespace BlazeSharp
             Instance.Dispose(true);
         }
         #endregion
+
+        /// <summary>
+        /// live stats ui. may be null
+        /// </summary>
+        LiveStatsUI liveStats;
 
         /// <summary>
         /// Keyboard Simulator to type
@@ -71,14 +78,17 @@ namespace BlazeSharp
             commands = BlazeCommands.FromFile(COMMANDS_FILE);
             if (commands == null)
             {
-                Console.WriteLine("Loading of Commands failed!");
+                MessageBox.Show($"Could not load Commands from {COMMANDS_FILE}!", "Cannot Load Commands", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
             //initialize monitor
             keyMonitor.Init();
             keyMonitor.KeyPressed += OnGlobalKeyPress;
-            Console.WriteLine("Ready.");
+
+            //initialize ui
+            liveStats = new LiveStatsUI();
+            liveStats.Show();
         }
 
         /// <summary>
@@ -98,7 +108,13 @@ namespace BlazeSharp
             {
                 //record keypress
                 commandCapture.Append(vChar);
-                cancelKeypress = CheckAndTypeCommand();
+                if (CheckAndTypeCommand())
+                {
+                    //command typed
+                    cancelKeypress = true;
+                    commandCapturing = false;
+                    commandCapture.Clear();
+                }
             }
 
             //hotchar was pressed, start listening
@@ -108,13 +124,8 @@ namespace BlazeSharp
                 commandCapturing = true;
             }
 
-            //write stats to console
-            Console.Clear();
-            Console.SetCursorPosition(0, 0);
-            Console.WriteLine($@"
-Last Key:        {vKey.ToString()}
-Last char:       {vChar.ToString()}
-Current Command: {(commandCapturing ? commandCapture.ToString() : "None")}");
+            //write stats to ui
+            liveStats?.UpdateStats(vKey, vChar, commandCapture.ToString(), commandCapturing);
 
             return cancelKeypress;
         }
@@ -195,6 +206,9 @@ Current Command: {(commandCapturing ? commandCapture.ToString() : "None")}");
 
             //dispose keymon
             keyMonitor?.Dispose();
+
+            //dispose uis
+            liveStats?.Dispose();
         }
     }
 }

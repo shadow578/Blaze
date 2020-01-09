@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace BlazeSharp
+namespace BlazeSharp.Keyboard
 {
     class KeyboardSimulator
     {
