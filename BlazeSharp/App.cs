@@ -1,7 +1,10 @@
 ﻿using BlazeSharp.Keyboard;
 using BlazeSharp.UI;
 using System;
+using System.Diagnostics;
+using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Windows.Forms;
 
@@ -28,6 +31,11 @@ namespace BlazeSharp
             Instance.Dispose(true);
         }
         #endregion
+
+        /// <summary>
+        /// The notify icon that provides basic user controls
+        /// </summary>
+        NotifyIcon notifyIcon;
 
         /// <summary>
         /// live stats ui. may be null
@@ -78,7 +86,8 @@ namespace BlazeSharp
             commands = BlazeCommands.FromFile(COMMANDS_FILE);
             if (commands == null)
             {
-                MessageBox.Show($"Could not load Commands from {COMMANDS_FILE}!", "Cannot Load Commands", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Could not load Commands from {COMMANDS_FILE}!\nApplication will exit.", "Cannot Load Commands", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Application.Exit();
                 return;
             }
 
@@ -88,7 +97,42 @@ namespace BlazeSharp
 
             //initialize ui
             liveStats = new LiveStatsUI();
-            liveStats.Show();
+            InitNotify();
+        }
+
+        /// <summary>
+        /// initializes the notify icon
+        /// </summary>
+        void InitNotify()
+        {
+            //create menu
+            ContextMenu context = new ContextMenu();
+            context.MenuItems.Add("Edit Commands", (s, e) =>
+            {
+                //open commands.blaze file in editor
+                Process.Start("notepad", Path.Combine(Environment.CurrentDirectory, COMMANDS_FILE));
+            });
+            context.MenuItems.Add("Live Stats", (s, e) =>
+            {
+                //show live stats window
+                liveStats.Show();
+            });
+            context.MenuItems.Add("Exit App", (s, e) =>
+            {
+                //exit the app
+                Application.Exit();
+            });
+
+            //create icon
+            notifyIcon = new NotifyIcon()
+            {
+                Icon = SystemIcons.Error,
+                Text = "Blaze - Running",
+                ContextMenu = context
+            };
+
+            //make icon visible
+            notifyIcon.Visible = true;
         }
 
         /// <summary>
@@ -209,6 +253,7 @@ namespace BlazeSharp
 
             //dispose uis
             liveStats?.Dispose();
+            notifyIcon?.Dispose();
         }
     }
 }
